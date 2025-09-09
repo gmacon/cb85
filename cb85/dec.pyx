@@ -11,7 +11,11 @@ cdef unsigned char *DECODE_B85 = [
 
 cpdef bytes b85decode(bytes x):
     cdef int sz = len(x)
-    cdef bytearray out = bytearray(4 * sz // 5)
+    cdef int padding = sz % 5
+    if padding > 0:
+        padding = 5 - padding
+
+    cdef bytearray out = bytearray(4 * (sz + padding) // 5)
     cdef unsigned char *z = x
     cdef unsigned char *o = out
     cdef unsigned int acc, de
@@ -26,7 +30,8 @@ cpdef bytes b85decode(bytes x):
                 de = DECODE_B85[z[i+j]]
                 acc = 85 * acc + de
             else:
-                break
+                de = DECODE_B85[0x7e]
+                acc = 85 * acc + de
 
         o[k+0] = (acc >> 24) & 0xff
         o[k+1] = (acc >> 16) & 0xff
@@ -34,4 +39,7 @@ cpdef bytes b85decode(bytes x):
         o[k+3] =  acc        & 0xff
         k += 4
 
-    return bytes(out)
+    cdef result = bytes(out)
+    if padding:
+        result = result[:-padding]
+    return result

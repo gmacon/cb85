@@ -14,7 +14,7 @@ cdef unsigned char *ENCODE_B85 = [
 ]
 
 @cython.cdivision(True)
-cpdef bytes b85encode(bytes x):
+cpdef bytes b85encode(bytes x, bint pad=False):
     cdef int sz = len(x)
     cdef int padding = sz % 4
     if padding > 0:
@@ -40,4 +40,7 @@ cpdef bytes b85encode(bytes x):
         o[j+4] = ENCODE_B85[acc % 85]
         j += 5
 
-    return bytes(out)
+    cdef result = bytes(out)
+    if padding and not pad:
+        result = result[:-padding]
+    return result
